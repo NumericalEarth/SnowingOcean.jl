@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SnowingOcean = "577c8c34-2c37-41a5-9110-2053d3f5c951"
+
+[compat]
+Documenter = "1"
