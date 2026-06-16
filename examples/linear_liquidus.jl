@@ -1,5 +1,6 @@
 using GLMakie
 using GibbsSeaWater
+using SnowingOcean
 using Printf
 
 fig = Figure(size=(600, 600))
@@ -19,7 +20,7 @@ p = pressure.(d)
 for Sᴬ = (0, 20, 30, 40)
     Texact = GibbsSeaWater.gsw_ct_freezing.(Sᴬ, p, 0)
     z = @. -d
-    Tapprox = @. - μ * Sᴬ + γ * z
+    Tapprox = linear_freezing_temperature.(Sᴬ, z; slope=μ, depth_coefficient=γ)
     lbl = @sprintf("Sᴬ = %d g/kg", Sᴬ)
     lines!(axp, d, Texact, linewidth=4, label=lbl)
     lines!(axp, d, Tapprox, linestyle=:dash)

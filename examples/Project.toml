@@ -1,0 +1,8 @@
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+GibbsSeaWater = "9a22fb26-0b63-4589-b28e-8f9d0b5c3d05"
+Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SeawaterPolynomials = "d496a93d-167e-4197-9f49-d3af4ff8fe40"
+SnowingOcean = "577c8c34-2c37-41a5-9110-2053d3f5c951"

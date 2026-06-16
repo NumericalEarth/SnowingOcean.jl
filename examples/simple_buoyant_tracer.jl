@@ -1,6 +1,6 @@
 using Oceananigans
 using Oceananigans.Units: minute, minutes, hours
-using Oceananigans.BoundaryConditions: fill_halo_regions!, ImpenetrableBoundaryCondition
+using SnowingOcean
 using Printf
 #using GLMakie
 
@@ -17,32 +17,16 @@ f = 1e-4
 h₀ = 10 # initial mixed layer depth
 w₀ = 1e-3 # terminal velocity of rising particles
 
-# Waves
-g = 9.81
-a = 0.8    # m
-λ = 60     # m
-k = 2π / λ # m⁻¹
-σ = sqrt(g * k) # s⁻¹
-Uˢ = a^2 * σ * k # m s⁻¹
-
 grid = RectilinearGrid(arch, size=(Nx, Ny, Nz), halo=(5, 5, 5), x=(0, Lx), y=(0, Ly), z=(-Lz, 0))
 
-@inline ∂z_uˢ(z, t, p) = 1 / (2 * p.k) * p.Uˢ * exp(2 * p.k * z)
-stokes_drift = UniformStokesDrift(∂z_uˢ = ∂z_uˢ , parameters=(; k, Uˢ))
+stokes_drift = monochromatic_stokes_drift(amplitude=0.8, wavelength=60)
 
 u_bcs = FieldBoundaryConditions(top = FluxBoundaryCondition(τˣ))
 coriolis = FPlane(; f) # s⁻¹
 
-w_location = (Face, Center, Center)
-w_bcs = FieldBoundaryConditions(grid, w_location,
-                                top = ImpenetrableBoundaryCondition(),
-                                bottom = ImpenetrableBoundaryCondition())
-wc = ZFaceField(grid, boundary_conditions=w_bcs)
-set!(wc, w₀)
-fill_halo_regions!(wc)
-c_forcing = AdvectiveForcing(w=wc)
+c_forcing = rising_tracer_forcing(grid, w₀)
 
-model = NonhydrostaticModel(; grid, coriolis, stokes_drift,
+model = NonhydrostaticModel(grid; coriolis, stokes_drift,
                             advection = WENO(order=9),
                             timestepper = :RungeKutta3,
                             tracers = (:b, :c),
@@ -99,17 +83,17 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(20))
 time_interval = 20minutes
 Nz = size(grid, 3)
 outputs = merge(model.velocities, model.tracers)
-simulation.output_writers[:xy] = JLD2OutputWriter(model, outputs,
-                                                  indices = (:, :, Nz),
-                                                  schedule = TimeInterval(time_interval),
-                                                  filename = "langmuir_particles_xy.jld2",
-                                                  overwrite_existing = true)
+simulation.output_writers[:xy] = JLD2Writer(model, outputs,
+                                            indices = (:, :, Nz),
+                                            schedule = TimeInterval(time_interval),
+                                            filename = "langmuir_particles_xy.jld2",
+                                            overwrite_existing = true)
 
-simulation.output_writers[:yz] = JLD2OutputWriter(model, outputs,
-                                                  indices = (1, :, :),
-                                                  schedule = TimeInterval(time_interval),
-                                                  filename = "langmuir_particles_yz.jld2",
-                                                  overwrite_existing = true)
+simulation.output_writers[:yz] = JLD2Writer(model, outputs,
+                                            indices = (1, :, :),
+                                            schedule = TimeInterval(time_interval),
+                                            filename = "langmuir_particles_yz.jld2",
+                                            overwrite_existing = true)
 
 averages = (
     u =  Average(model.velocities.u, dims=(1, 2)),
@@ -117,11 +101,11 @@ averages = (
     b =  Average(model.tracers.b, dims=(1, 2)),
     c =  Average(model.tracers.c, dims=(1, 2)),
 )
-            
-simulation.output_writers[:z] = JLD2OutputWriter(model, averages,
-                                                 schedule = TimeInterval(time_interval),
-                                                 filename = "langmuir_particles_averages.jld2",
-                                                 overwrite_existing = true)
+
+simulation.output_writers[:z] = JLD2Writer(model, averages,
+                                           schedule = TimeInterval(time_interval),
+                                           filename = "langmuir_particles_averages.jld2",
+                                           overwrite_existing = true)
 
 
 
