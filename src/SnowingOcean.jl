@@ -5,9 +5,12 @@ export
     rising_tracer_forcing,
     linear_freezing_temperature,
     LinearLiquidus,
+    DepthDependentLiquidus,
     melting_temperature,
+    TwoEquation,
+    ThreeEquation,
     interface_temperature_and_salinity,
-    ThreeEquationInterface,
+    IceOceanInterface,
     compute_melt_fluxes!,
     add_melt_flux_callback!,
     ice_ocean_boundary_conditions

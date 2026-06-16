@@ -1,5 +1,9 @@
 # SnowingOcean.jl
 
+[![CI](https://github.com/NumericalEarth/SnowingOcean.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NumericalEarth/SnowingOcean.jl/actions/workflows/CI.yml)
+[![Documentation (stable)](https://img.shields.io/badge/docs-stable-blue.svg)](https://NumericalEarth.github.io/SnowingOcean.jl/stable/)
+[![Documentation (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://NumericalEarth.github.io/SnowingOcean.jl/dev/)
+
 Large eddy simulations of frazil ice advection, formation, and melting in the turbulent upper ocean, built on [Oceananigans](https://github.com/CliMA/Oceananigans.jl).
 
 ## Installation
