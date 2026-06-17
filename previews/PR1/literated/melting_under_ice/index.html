@@ -72,30 +72,17 @@ set!(model, T=Tᵢ, S=34)</code></pre><h2 id="Run"><a class="docs-heading-anchor
 conjure_time_step_wizard!(simulation, cfl=0.5, max_Δt=10.0)
 
 run!(simulation)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Initializing simulation...
-[ Info:     ... simulation initialization complete (1.371 seconds)
+[ Info:     ... simulation initialization complete (1.310 seconds)
 [ Info: Executing initial time step...
-[ Info:     ... initial time step complete (7.886 seconds).
-[ Info: Simulation is stopping after running for 14.910 seconds.
-[ Info: Simulation time 20 minutes equals or exceeds stop time 20 minutes.</code></pre><h2 id="Visualize"><a class="docs-heading-anchor" href="#Visualize">Visualize</a><a id="Visualize-1"></a><a class="docs-heading-anchor-permalink" href="#Visualize" title="Permalink"></a></h2><p>Temperature and salinity at the end of the run. The ocean cools and freshens in a boundary layer beneath the ice (shown in gray).</p><pre><code class="language-julia hljs">xc = xnodes(grid, Center())
-zc = znodes(grid, Center())
+[ Info:     ... initial time step complete (8.284 seconds).
+[ Info: Simulation is stopping after running for 15.404 seconds.
+[ Info: Simulation time 20 minutes equals or exceeds stop time 20 minutes.</code></pre><h2 id="Visualize"><a class="docs-heading-anchor" href="#Visualize">Visualize</a><a id="Visualize-1"></a><a class="docs-heading-anchor-permalink" href="#Visualize" title="Permalink"></a></h2><p>Temperature and salinity at the end of the run. We plot the <code>T</code> and <code>S</code> fields directly: the Oceananigans Makie extension supplies the <code>x</code>–<code>z</code> coordinates and masks the immersed ice (shown in gray), where the ocean has cooled and freshened in a boundary layer.</p><pre><code class="language-julia hljs">fig = Figure(size=(900, 700))
+axT = Axis(fig[1, 1]; xlabel=&quot;x (m)&quot;, ylabel=&quot;z (m)&quot;, title=&quot;Temperature (°C)&quot;)
+axS = Axis(fig[2, 1]; xlabel=&quot;x (m)&quot;, ylabel=&quot;z (m)&quot;, title=&quot;Salinity (g kg⁻¹)&quot;)
 
-solid = [is_ice(x, z) for x in xc, z in zc]
-mask(φ) = (ψ = Array{Float64}(interior(φ)[:, 1, :]); ψ[solid] .= NaN; ψ)
-function nanrange(ψ)
-    lo, hi = extrema(filter(!isnan, ψ))
-    return lo == hi ? (lo - 1, hi + 1) : (lo, hi)
-end
-
-Tn = mask(model.tracers.T)
-Sn = mask(model.tracers.S)
-
-fig = Figure(size=(900, 700))
-axT = Axis(fig[1, 1], xlabel=&quot;x (m)&quot;, ylabel=&quot;z (m)&quot;, title=&quot;Temperature (°C)&quot;)
-axS = Axis(fig[2, 1], xlabel=&quot;x (m)&quot;, ylabel=&quot;z (m)&quot;, title=&quot;Salinity (g kg⁻¹)&quot;)
-
-hmT = heatmap!(axT, xc, zc, Tn; colormap=:thermal, colorrange=nanrange(Tn), nan_color=:gray70)
-hmS = heatmap!(axS, xc, zc, Sn; colormap=:haline, colorrange=nanrange(Sn), nan_color=:gray70)
+hmT = heatmap!(axT, model.tracers.T; colormap=:thermal, nan_color=:gray70)
+hmS = heatmap!(axS, model.tracers.S; colormap=:haline, nan_color=:gray70)
 Colorbar(fig[1, 2], hmT)
 Colorbar(fig[2, 2], hmS)
 
-fig</code></pre><img src="429586c4.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../frazil_boundary_layer/">Frazil ice in a cooling, wind-driven boundary layer (2D) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 13:59">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig</code></pre><img src="1ffea195.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../frazil_boundary_layer/">Frazil ice in a cooling, wind-driven boundary layer (2D) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 20:32">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
