@@ -110,4 +110,26 @@ using Test
         @test maximum(T) ≤ T₀ + 1e-6
         @test maximum(S) ≤ S₀ + 1e-6
     end
+
+    @testset "frazil model" begin
+        fm = FrazilModel(60.0)  # 60 s relaxation timescale
+        forcings = frazil_forcing(fm)
+        @test haskey(forcings, :T) && haskey(forcings, :ϕ)
+        @test haskey(frazil_forcing(fm; frazil_tracer=:frazil), :frazil)
+
+        S, z = 34.0, -10.0
+        T★ = melting_temperature(fm.liquidus, S, z)
+
+        # Supercooled water grows frazil and relaxes T upward toward freezing
+        FᵀC, FᵠC = SnowingOcean.frazil_tendencies(fm, T★ - 0.05, S, z)
+        @test FᵀC > 0 && FᵠC > 0
+        # At the freezing point there is no source
+        _, Fᵠ0 = SnowingOcean.frazil_tendencies(fm, T★, S, z)
+        @test Fᵠ0 ≈ 0 atol=1e-12
+        # Warm water melts frazil
+        _, FᵠW = SnowingOcean.frazil_tendencies(fm, T★ + 0.05, S, z)
+        @test FᵠW < 0
+        # The source terms conserve combined sensible + latent energy: c Fᵀ == L Fᵠ
+        @test fm.heat_capacity * FᵀC ≈ fm.latent_heat * FᵠC rtol=1e-12
+    end
 end

@@ -13,7 +13,9 @@ export
     IceOceanInterface,
     compute_melt_fluxes!,
     add_melt_flux_callback!,
-    ice_ocean_boundary_conditions
+    ice_ocean_boundary_conditions,
+    FrazilModel,
+    frazil_forcing
 
 using Oceananigans
 using Oceananigans.BoundaryConditions: fill_halo_regions!, ImpenetrableBoundaryCondition
@@ -77,5 +79,6 @@ The default coefficients approximate the TEOS-10 freezing temperature
     - slope * S + depth_coefficient * z
 
 include("ice_ocean_interface.jl")
+include("frazil.jl")
 
 end # module SnowingOcean

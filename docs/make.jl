@@ -9,6 +9,7 @@ literated_dir = joinpath(@__DIR__, "src", "literated")
 
 examples = [
     "melting_under_ice.jl",
+    "frazil_boundary_layer.jl",
 ]
 
 for example in examples
