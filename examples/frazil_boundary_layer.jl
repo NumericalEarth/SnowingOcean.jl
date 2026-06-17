@@ -99,59 +99,98 @@ T★ = melting_temperature(frazil.liquidus, S₀, 0)
 Tᵢ(x, z) = T★ + 1e-4 * randn()
 set!(model, T=Tᵢ, S=S₀, ϕ=0)
 
-# ## Energy diagnostic
+# ## Run
 #
-# We track the column-integrated, horizontally averaged combined energy per unit area,
-# ``\mathcal{E} = ρ\, L_z\, (c\,\langle T \rangle - L\,\langle ϕ \rangle)``. The frazil source
-# conserves it, so ``\mathcal{E}`` should change *only* through the surface cooling, i.e.
-# ``\mathcal{E}(t) = \mathcal{E}(0) - ρ\, c\, J^T t``. Plotting both is a conservation check.
-
-domain_mean(φ) = sum(interior(φ)) / length(interior(φ))
-total_energy() = ρₒ * Lz * (cₒ * domain_mean(model.tracers.T) - L * domain_mean(model.tracers.ϕ))
-
-times = Float64[]
-energies = Float64[]
+# We write the vertical velocity and frazil concentration for the animation, along with the
+# horizontally averaged frazil and temperature for the profiles shown afterward.
 
 simulation = Simulation(model, Δt=0.5, stop_time=2hours)
 conjure_time_step_wizard!(simulation, cfl=0.7, max_Δt=5.0)
 
-function record!(sim)
-    push!(times, time(sim))
-    push!(energies, total_energy())
-    return nothing
-end
-simulation.callbacks[:energy] = Callback(record!, TimeInterval(2minutes))
+outputs = (w = model.velocities.w,
+           ϕ = model.tracers.ϕ,
+           ϕ_avg = Average(model.tracers.ϕ, dims=(1, 2)),
+           T_avg = Average(model.tracers.T, dims=(1, 2)))
+
+simulation.output_writers[:fields] = JLD2Writer(model, outputs,
+                                                schedule = TimeInterval(2minutes),
+                                                filename = "frazil_boundary_layer.jld2",
+                                                overwrite_existing = true)
 
 run!(simulation)
 
-# ## Results
+# ## Animation of the flow and frazil concentration
 #
-# Energy conservation: the diagnosed energy follows the line set by the surface cooling.
+# Convective plumes (driven by brine rejection during frazil formation) stir the boundary
+# layer; the frazil ice is carried down from the surface where it forms.
 
-E₀ = energies[1]
-expected = E₀ .- ρₒ * cₒ * Jᵀ .* times
+wt = FieldTimeSeries("frazil_boundary_layer.jld2", "w")
+ϕt = FieldTimeSeries("frazil_boundary_layer.jld2", "ϕ")
+times = wt.times
+nothing #hide
 
-# Horizontal averages (over `x`) of the final frazil concentration and temperature.
+n = Observable(1)
+title = @lift "frazil ice in a cooling, wind-driven boundary layer — t = " * prettytime(times[$n])
+wn = @lift wt[$n]
+ϕn = @lift ϕt[$n]
 
-xϕ = sum(interior(model.tracers.ϕ), dims=1)[1, 1, :] ./ Nx
-xT = sum(interior(model.tracers.T), dims=1)[1, 1, :] ./ Nx
+wlim = maximum(abs, interior(wt))
+ϕlim = maximum(interior(ϕt))
+
+fig = Figure(size = (900, 600))
+ax_w = Axis(fig[2, 1]; xlabel = "x (m)", ylabel = "z (m)")
+ax_ϕ = Axis(fig[3, 1]; xlabel = "x (m)", ylabel = "z (m)")
+fig[1, 1] = Label(fig, title, tellwidth = false)
+
+hm_w = heatmap!(ax_w, wn; colormap = :balance, colorrange = (-wlim, wlim))
+Colorbar(fig[2, 2], hm_w; label = "Vertical velocity w (m s⁻¹)")
+
+hm_ϕ = heatmap!(ax_ϕ, ϕn; colormap = :deep, colorrange = (0, ϕlim))
+Colorbar(fig[3, 2], hm_ϕ; label = "Frazil ice fraction ϕ")
+
+record(fig, "frazil_boundary_layer.mp4", 1:length(times), framerate = 8) do i
+    n[] = i
+end
+nothing #hide
+
+# ![](frazil_boundary_layer.mp4)
+
+# ## Horizontally averaged frazil and temperature
+#
+# After the animation we show the horizontally averaged profiles. Frazil forms near the
+# surface where the water supercools and is mixed downward through the boundary layer, while
+# the temperature stays close to the freezing point ``T⋆``. We also verify energy
+# conservation: the frazil source conserves the combined sensible-plus-latent energy
+# ``\mathcal{E} = ρ\, L_z\, (c\,\langle T \rangle - L\,\langle ϕ \rangle)``, so it changes only
+# through the surface cooling, ``\mathcal{E}(t) = \mathcal{E}(0) - ρ\, c\, J^T t``.
+
+ϕ_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "ϕ_avg")
+T_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "T_avg")
 zc = znodes(grid, Center())
 
-fig = Figure(size=(1000, 420))
+column_mean(c) = sum(interior(c)) / length(interior(c))
+energy(c_T, c_ϕ) = ρₒ * Lz * (cₒ * column_mean(c_T) - L * column_mean(c_ϕ))
+energies = [energy(T_avg[i], ϕ_avg[i]) for i in 1:length(times)]
+expected = energies[1] .- ρₒ * cₒ * Jᵀ .* times
 
-axE = Axis(fig[1, 1], xlabel="time (hours)", ylabel="energy (J m⁻²)",
-           title="Combined sensible + latent energy")
-lines!(axE, times ./ hour, energies, label="diagnosed  ρ Lz (c⟨T⟩ - L⟨ϕ⟩)")
-lines!(axE, times ./ hour, expected, linestyle=:dash, label="E₀ - ρ c Jᵀ t")
-axislegend(axE, position=:lb)
+ϕ_final = interior(ϕ_avg[end])[1, 1, :]
+T_final = interior(T_avg[end])[1, 1, :]
 
-axϕ = Axis(fig[1, 2], xlabel="⟨ϕ⟩  (ice volume fraction)", ylabel="z (m)",
-           title="Horizontally averaged frazil")
-lines!(axϕ, xϕ, zc)
+fig = Figure(size = (1000, 420))
 
-axT = Axis(fig[1, 3], xlabel="⟨T⟩ (°C)", ylabel="z (m)", title="Horizontally averaged T")
-lines!(axT, xT, zc, label="⟨T⟩")
-vlines!(axT, [T★], color=:gray, linestyle=:dash, label="T⋆")
-axislegend(axT, position=:rb)
+axE = Axis(fig[1, 1]; xlabel = "time (hours)", ylabel = "energy (J m⁻²)",
+           title = "Combined sensible + latent energy")
+lines!(axE, times ./ hour, energies, label = "diagnosed  ρ Lz (c⟨T⟩ - L⟨ϕ⟩)")
+lines!(axE, times ./ hour, expected, linestyle = :dash, label = "ℰ₀ - ρ c Jᵀ t")
+axislegend(axE, position = :lb)
+
+axϕ = Axis(fig[1, 2]; xlabel = "⟨ϕ⟩  (ice volume fraction)", ylabel = "z (m)",
+           title = "Horizontally averaged frazil")
+lines!(axϕ, ϕ_final, zc)
+
+axT = Axis(fig[1, 3]; xlabel = "⟨T⟩ (°C)", ylabel = "z (m)", title = "Horizontally averaged T")
+lines!(axT, T_final, zc, label = "⟨T⟩")
+vlines!(axT, [T★], color = :gray, linestyle = :dash, label = "T⋆")
+axislegend(axT, position = :rb)
 
 fig

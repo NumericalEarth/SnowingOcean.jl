@@ -25,3 +25,6 @@ Manifest.toml
 
 data/
 *.jld2
+
+# Generated animations
+*.mp4
