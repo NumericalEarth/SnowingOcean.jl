@@ -14,19 +14,45 @@
 #
 # ## The frazil model
 #
-# The ice volume fraction ``ϕ`` and temperature ``T`` relax toward the local freezing point
-# ``T⋆ = T^f(S, z)`` on a timescale ``τ``:
+# Where the water is supercooled (below its local freezing point ``T⋆ = T^f(S, z)``), frazil
+# grows and releases latent heat that relaxes the temperature back toward freezing on a
+# timescale ``τ``, while the ice volume fraction ``ϕ`` increases:
 #
 # ```math
-# \frac{\mathrm{D} T}{\mathrm{D} t} = \frac{T⋆ - T}{τ}, \qquad
-# \frac{\mathrm{D} ϕ}{\mathrm{D} t} = \frac{T⋆ - T}{τ\, 𝒯}, \qquad 𝒯 = \frac{L}{c}.
+# \frac{\mathrm{D} T}{\mathrm{D} t} = F_T = \frac{\max(T⋆ - T,\, 0)}{τ}, \qquad
+# \frac{\mathrm{D} ϕ}{\mathrm{D} t} = F_ϕ = \frac{1}{𝒯}\, F_T, \qquad 𝒯 = \frac{L}{c},
 # ```
 #
-# Supercooled water (``T < T⋆``) grows frazil and is warmed back toward freezing by the
-# released latent heat. Because ``c\,(T⋆-T)/τ = L\,(T⋆-T)/(τ𝒯)``, the source terms conserve
-# the combined sensible-plus-latent energy ``c\,T - L\,ϕ`` — we verify this below. Here ``τ``
-# is a constant; see [`FrazilModel`](@ref) for the population-based timescales used by more
-# complete models.
+# with latent heat of fusion ``L`` and heat capacity ``c``. The source only *heats*: warm water
+# (``T > T⋆``) produces no source, so the ocean is never cooled spuriously and ``ϕ`` never goes
+# negative. (Melting of frazil carried into warm water would cool the ocean, but must be limited
+# by the available ``ϕ``; it is not included in this one-sided source.) See [`FrazilModel`](@ref)
+# for the population-based growth timescales used by more complete models.
+#
+# ### Energy conservation
+#
+# Frazil growth only trades sensible heat for latent heat, so it conserves energy. Define the
+# combined sensible-plus-latent energy per unit mass ``e = c\, T - L\, ϕ`` — the sensible heat
+# ``c T`` minus the latent heat ``L ϕ`` released on freezing the fraction ``ϕ``. The frazil
+# source changes it at the rate
+#
+# ```math
+# \left.\frac{\mathrm{D} e}{\mathrm{D} t}\right|_{\mathrm{frazil}}
+#   = c\, F_T - L\, F_ϕ = c\, F_T - L\,\frac{F_T}{𝒯} = c\, F_T - L\,\frac{c}{L}\, F_T = 0 ,
+# ```
+#
+# i.e. the latent heat released exactly matches the temperature rise. The cancellation is exact
+# because the two sources are *coupled* by ``c F_T = L F_ϕ``; it does **not** require ``F_T`` to
+# depend on ``ϕ``. Advection and diffusion conserve the volume integral of ``e`` up to boundary
+# fluxes, so the only sink is the prescribed surface cooling ``J^T``. The column-integrated,
+# horizontally averaged energy ``\mathcal{E} = ρ\, L_z\,(c\,\langle T\rangle - L\,\langle ϕ\rangle)``
+# should therefore follow
+#
+# ```math
+# \mathcal{E}(t) = \mathcal{E}(0) - ρ\, c\, J^T\, t ,
+# ```
+#
+# which we check in the diagnostics below.
 
 using SnowingOcean
 using Oceananigans
@@ -159,10 +185,10 @@ nothing #hide
 #
 # After the animation we show the horizontally averaged profiles. Frazil forms near the
 # surface where the water supercools and is mixed downward through the boundary layer, while
-# the temperature stays close to the freezing point ``T⋆``. We also verify energy
-# conservation: the frazil source conserves the combined sensible-plus-latent energy
-# ``\mathcal{E} = ρ\, L_z\, (c\,\langle T \rangle - L\,\langle ϕ \rangle)``, so it changes only
-# through the surface cooling, ``\mathcal{E}(t) = \mathcal{E}(0) - ρ\, c\, J^T t``.
+# the temperature stays close to the freezing point ``T⋆``. We also check the energy budget
+# derived above: the diagnosed energy ``\mathcal{E}`` should track the line
+# ``\mathcal{E}(0) - ρ\, c\, J^T t`` set by the surface cooling, confirming that the frazil
+# source itself neither creates nor destroys energy.
 
 ϕ_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "ϕ_avg")
 T_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "T_avg")

@@ -14,20 +14,28 @@ using Oceananigans.Grids: znode, Center
 """
     FrazilModel(timescale; liquidus=DepthDependentLiquidus(), latent_heat=3.34e5, heat_capacity=3991.0)
 
-A bulk model for the generation and melting of frazil ice in supercooled water. The ice
-volume fraction `ϕ` and temperature `T` relax toward thermodynamic equilibrium (the local
-freezing point `T⋆ = Tᶠ(S, z)`) at a rate set by `1/timescale`:
+A bulk model for the generation of frazil ice in supercooled water. Where the water is below
+its local freezing point `T⋆ = Tᶠ(S, z)`, frazil grows and releases latent heat that relaxes
+the temperature `T` back toward freezing while the ice volume fraction `ϕ` increases:
 
 ```math
-\\frac{\\mathrm{D} T}{\\mathrm{D} t} = \\frac{1}{τ}\\,(T⋆ - T), \\qquad
-\\frac{\\mathrm{D} ϕ}{\\mathrm{D} t} = \\frac{1}{τ\\,𝒯}\\,(T⋆ - T),
+\\frac{\\mathrm{D} T}{\\mathrm{D} t} = \\frac{\\max(T⋆ - T,\\, 0)}{τ}, \\qquad
+\\frac{\\mathrm{D} ϕ}{\\mathrm{D} t} = \\frac{1}{𝒯}\\,\\frac{\\mathrm{D} T}{\\mathrm{D} t},
 ```
 
 where `τ = timescale` and `𝒯 = L / c` is a temperature scale built from the latent heat of
-fusion `L` and heat capacity `c`. Supercooled water (`T < T⋆`) grows frazil (`Dϕ/Dt > 0`),
-releasing latent heat that warms the water back toward freezing; warm water (`T > T⋆`) melts
-existing frazil. Because `c \\, (T⋆ - T)/τ = L \\, (T⋆ - T)/(τ 𝒯)`, i.e. `c\\,F_T = L\\,F_ϕ`,
-the source terms exactly conserve the combined sensible-plus-latent energy `c\\,T - L\\,ϕ`.
+fusion `L` and heat capacity `c`. The source **only heats** the ocean (frazil formation): warm
+water (`T > T⋆`) produces no source, so the model neither cools the ocean spuriously nor drives
+`ϕ` negative.
+
+Energy is conserved because the two sources are locked together by `c\\,F_T = L\\,F_ϕ`: the
+latent heat released equals the temperature rise, so frazil growth merely converts sensible heat
+into latent heat. The combined sensible-plus-latent energy `e = c\\,T - L\\,ϕ` is therefore
+unchanged by the source (`\\dot e = c F_T - L F_ϕ = 0`) — note this follows from the *coupling*
+of the sources, not from `F_T` depending on `ϕ`.
+
+Melting of frazil advected into warm water (`T > T⋆`) — which would *cool* the ocean and must be
+rate-limited by the available `ϕ` — is deliberately not represented by this one-sided source.
 
 The `timescale` slot is deliberately a free parameter. Here it is a constant; more complete
 models tie the frazil-growth rate to the suspended-crystal population and geometry — the
@@ -60,12 +68,14 @@ end
 
 Return the temperature and frazil-concentration source terms `(Fᵀ, Fᵠ)` at ocean
 temperature `T`, salinity `S`, and height `z`:
-`Fᵀ = (T⋆ - T)/τ` and `Fᵠ = Fᵀ/𝒯` with `𝒯 = L/c` and `T⋆ = Tᶠ(S, z)`.
+`Fᵀ = max(T⋆ - T, 0)/τ` (heating from frazil growth, active only where supercooled) and
+`Fᵠ = Fᵀ/𝒯` with `𝒯 = L/c` and `T⋆ = Tᶠ(S, z)`.
 """
 @inline function frazil_tendencies(frazil::FrazilModel, T, S, z)
     T★ = melting_temperature(frazil.liquidus, S, z)
     𝒯 = frazil.latent_heat / frazil.heat_capacity
-    Fᵀ = (T★ - T) / frazil.timescale
+    supercooling = max(T★ - T, zero(T))      # only act where the water is below freezing
+    Fᵀ = supercooling / frazil.timescale     # latent heating from frazil growth (≥ 0)
     Fᵠ = Fᵀ / 𝒯
     return Fᵀ, Fᵠ
 end

@@ -168,11 +168,14 @@ using Test
         FᵀC, FᵠC = SnowingOcean.frazil_tendencies(fm, T★ - 0.05, S, z)
         @test FᵀC > 0 && FᵠC > 0
         # At the freezing point there is no source
-        _, Fᵠ0 = SnowingOcean.frazil_tendencies(fm, T★, S, z)
+        Fᵀ0, Fᵠ0 = SnowingOcean.frazil_tendencies(fm, T★, S, z)
+        @test Fᵀ0 ≈ 0 atol=1e-12
         @test Fᵠ0 ≈ 0 atol=1e-12
-        # Warm water melts frazil
-        _, FᵠW = SnowingOcean.frazil_tendencies(fm, T★ + 0.05, S, z)
-        @test FᵠW < 0
+        # Warm water produces no source: the model only heats (it never cools the ocean or
+        # drives ϕ negative)
+        FᵀW, FᵠW = SnowingOcean.frazil_tendencies(fm, T★ + 0.05, S, z)
+        @test FᵀW == 0 && FᵠW == 0
+        @test FᵀC ≥ 0  # the temperature source only heats
         # The source terms conserve combined sensible + latent energy: c Fᵀ == L Fᵠ
         @test fm.heat_capacity * FᵀC ≈ fm.latent_heat * FᵠC rtol=1e-12
     end
