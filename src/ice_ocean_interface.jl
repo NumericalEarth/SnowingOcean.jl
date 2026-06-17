@@ -1,13 +1,16 @@
 using Oceananigans
-using Oceananigans: defaults, UpdateStateCallsite
+using Oceananigans: defaults
 using Oceananigans.Architectures: architecture
 using Oceananigans.Grids: znode, Center
 using Oceananigans.Operators: ℑxᶜᵃᵃ, ℑyᵃᶜᵃ, Δzᶜᶜᶜ
-using Oceananigans.BoundaryConditions: FluxBoundaryCondition, FieldBoundaryConditions
+using Oceananigans.BoundaryConditions: BoundaryCondition, FluxBoundaryCondition, FieldBoundaryConditions, Flux
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryCondition
 using Oceananigans.Utils: launch!
 using Oceananigans.Fields: CenterField
 using KernelAbstractions: @kernel, @index
+using Adapt: Adapt, adapt
+
+import Oceananigans.BoundaryConditions: getbc, update_boundary_condition!
 
 using ClimaSeaIce.SeaIceThermodynamics: LinearLiquidus
 import ClimaSeaIce.SeaIceThermodynamics: melting_temperature
@@ -281,7 +284,9 @@ end
     compute_melt_fluxes!(model, interface::IceOceanInterface)
 
 Fill `interface.temperature_flux` and `interface.salt_flux` from the current model state
-(`T`, `S`, `u`, `v`). Designed to be called in a callback; see [`add_melt_flux_callback!`](@ref).
+(`T`, `S`, `u`, `v`). The boundary conditions returned by
+[`ice_ocean_boundary_conditions`](@ref) call this automatically inside `update_state!`, so
+it does not normally need to be invoked by hand.
 """
 function compute_melt_fluxes!(model, interface::IceOceanInterface)
     grid = model.grid
@@ -309,50 +314,58 @@ function compute_melt_fluxes!(model, interface::IceOceanInterface)
     return nothing
 end
 
-"""
-    add_melt_flux_callback!(simulation, interface; name=:melt_fluxes)
+#####
+##### A self-updating flux condition for the immersed ice base
+#####
 
-Add a callback that calls [`compute_melt_fluxes!`](@ref) to keep the flux `Field`s
-consistent with the evolving ocean state. It runs at the `UpdateStateCallsite` — i.e. inside
-`update_state!`, after the halos are filled and before the tendencies are computed — so the
-fluxes used in a given step reflect that step's state (no lag).
-
-(Oceananigans' `update_boundary_condition!` hook, used by open boundary conditions, is a
-no-op for `ImmersedBoundaryCondition`s, so a self-updating immersed flux BC would require
-type piracy; this callback achieves the same in-`update_state!` timing without it.)
-"""
-function add_melt_flux_callback!(simulation, interface::IceOceanInterface; name=:melt_fluxes)
-    simulation.callbacks[name] = Callback(compute_melt_fluxes!, IterationInterval(1);
-                                          parameters = interface,
-                                          callsite = UpdateStateCallsite())
-    return simulation
+# A boundary-condition `condition` that (a) returns a precomputed kinematic flux on the
+# immersed boundary via `getbc`, and (b) — for the "driver" that carries the `interface` —
+# recomputes the fluxes from `update_boundary_condition!`, which Oceananigans calls inside
+# `update_state!` (after halo fills, before tendencies). On a 3D immersed boundary a plain
+# array condition is unsupported (`getbc` only indexes [i,j]), so we index [i,j,k] here.
+struct IceOceanFlux{F, I}
+    flux :: F          # precomputed kinematic flux Field (Jᵀ or Jˢ)
+    interface :: I     # the IceOceanInterface for the driver, or `nothing` for the passive BC
 end
 
-#####
-##### Boundary conditions that read the flux Fields
-#####
+@inline getbc(c::IceOceanFlux, i, j, k, grid, args...) = @inbounds c.flux[i, j, k]
 
-# Discrete-form flux on an immersed boundary: index the precomputed flux Field directly.
-# (Oceananigans `getbc` only supports 2D array conditions [i,j]; on a 3D immersed boundary
-# we must use a discrete function that indexes [i,j,k].)
-@inline ice_flux(i, j, k, grid, clock, fields, J) = @inbounds J[i, j, k]
-@inline ice_flux(i, j, grid, clock, fields, J)    = @inbounds J[i, j]
+# Only the flux field is needed inside kernels; the interface is host-only (used in update).
+Adapt.adapt_structure(to, c::IceOceanFlux) = IceOceanFlux(adapt(to, c.flux), nothing)
+
+const IceOceanFluxBC = BoundaryCondition{<:Flux, <:IceOceanFlux}
+
+# An `ImmersedBoundaryCondition` whose `top` facet (its 6th type parameter) is our flux
+# condition. Dispatching `update_boundary_condition!` on this is *not* type piracy: the
+# signature is specialized to our own `IceOceanFlux`, so it can never fire for any other
+# package's immersed boundary condition.
+const IceOceanImmersedBC = ImmersedBoundaryCondition{<:Any, <:Any, <:Any, <:Any, <:Any, <:IceOceanFluxBC}
+
+function update_boundary_condition!(ibc::IceOceanImmersedBC, ::Val{:immersed}, field, model)
+    interface = ibc.top.condition.interface
+    interface === nothing || compute_melt_fluxes!(model, interface)  # driver fills both Jᵀ and Jˢ
+    return nothing
+end
 
 """
     ice_ocean_boundary_conditions(interface; drag=true)
 
 Return a `NamedTuple` of `FieldBoundaryConditions` `(u, v, T, S)` that apply the ice–ocean
 melt fluxes on the immersed boundary (ice base). The `T` and `S` conditions read
-`interface.temperature_flux`/`salt_flux`; the `u`, `v` conditions apply `BulkDrag`
-with the same `drag_coefficient`, so momentum and melt fluxes are mutually consistent. Pass
+`interface.temperature_flux`/`salt_flux`, and they are **self-updating**: the temperature
+condition carries the `interface` and recomputes both fluxes from `update_boundary_condition!`
+inside `update_state!` (no callback needed). The `u`, `v` conditions apply `BulkDrag` with the
+same `drag_coefficient`, so momentum and melt fluxes are mutually consistent. Pass
 `drag=false` to omit the momentum drag and return only `(T, S)`.
 """
 function ice_ocean_boundary_conditions(interface::IceOceanInterface; drag::Bool=true)
     Jᵀ = interface.temperature_flux
     Jˢ = interface.salt_flux
 
-    T_flux = FluxBoundaryCondition(ice_flux; discrete_form=true, parameters=Jᵀ)
-    S_flux = FluxBoundaryCondition(ice_flux; discrete_form=true, parameters=Jˢ)
+    # The temperature condition drives the solve (carries the interface); the salt condition
+    # is passive because a single solve fills both flux fields.
+    T_flux = FluxBoundaryCondition(IceOceanFlux(Jᵀ, interface))
+    S_flux = FluxBoundaryCondition(IceOceanFlux(Jˢ, nothing))
 
     T_bcs = FieldBoundaryConditions(immersed = ImmersedBoundaryCondition(top = T_flux))
     S_bcs = FieldBoundaryConditions(immersed = ImmersedBoundaryCondition(top = S_flux))

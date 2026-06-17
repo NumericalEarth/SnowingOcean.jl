@@ -98,8 +98,7 @@ using Test
         set!(model, T=T₀, S=S₀)
 
         simulation = Simulation(model, Δt=10.0, stop_iteration=5)
-        add_melt_flux_callback!(simulation, interface)
-        run!(simulation)
+        run!(simulation)  # melt fluxes update themselves inside update_state!
 
         T = interior(model.tracers.T)
         S = interior(model.tracers.S)
@@ -150,8 +149,7 @@ using Test
         T₀, S₀ = 1.0, 34.0
         set!(model, T=T₀, S=S₀)
         simulation = Simulation(model, Δt=10.0, stop_iteration=5)
-        add_melt_flux_callback!(simulation, interface)
-        run!(simulation)
+        run!(simulation)  # melt fluxes update themselves inside update_state!
         @test minimum(interior(model.tracers.T)) < T₀
         @test minimum(interior(model.tracers.S)) < S₀
         @test all(isfinite, interior(model.tracers.T))

@@ -4,6 +4,7 @@ authors = ["Gregory L. Wagner <greg@aeolus.earth> and contributors"]
 version = "0.1.0"
 
 [deps]
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 ClimaSeaIce = "6ba0ff68-24e6-4315-936c-2e99227c95a4"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
 Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
@@ -11,6 +12,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SeawaterPolynomials = "d496a93d-167e-4197-9f49-d3af4ff8fe40"
 
 [compat]
+Adapt = "4"
 ClimaSeaIce = "0.5"
 KernelAbstractions = "0.9"
 Oceananigans = "0.110"

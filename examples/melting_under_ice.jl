@@ -94,11 +94,11 @@ set!(model, T=Tᵢ, S=34)
 
 # ## Run
 #
-# A short simulation; the melt fluxes are refreshed each iteration by the callback.
+# A short simulation. The melt-flux boundary conditions update themselves inside
+# `update_state!` each step — no callback is needed.
 
 simulation = Simulation(model, Δt=1.0, stop_time=20minutes)
 conjure_time_step_wizard!(simulation, cfl=0.5, max_Δt=10.0)
-add_melt_flux_callback!(simulation, interface)
 
 run!(simulation)
 

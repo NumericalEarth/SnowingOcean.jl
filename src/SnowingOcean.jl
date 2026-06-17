@@ -13,7 +13,6 @@ export
     interface_temperature_and_salinity,
     IceOceanInterface,
     compute_melt_fluxes!,
-    add_melt_flux_callback!,
     ice_ocean_boundary_conditions,
     FrazilModel,
     frazil_forcing
