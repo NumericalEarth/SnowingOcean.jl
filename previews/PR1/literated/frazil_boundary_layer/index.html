@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Frazil ice in a cooling, wind-driven boundary layer (2D) · SnowingOcean.jl</title><meta name="title" content="Frazil ice in a cooling, wind-driven boundary layer (2D) · SnowingOcean.jl"/><meta property="og:title" content="Frazil ice in a cooling, wind-driven boundary layer (2D) · SnowingOcean.jl"/><meta property="twitter:title" content="Frazil ice in a cooling, wind-driven boundary layer (2D) · SnowingOcean.jl"/><meta name="description" content="Documentation for SnowingOcean.jl."/><meta property="og:description" content="Documentation for SnowingOcean.jl."/><meta property="twitter:description" content="Documentation for SnowingOcean.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/SnowingOcean.jl/stable/literated/frazil_boundary_layer/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/SnowingOcean.jl/stable/literated/frazil_boundary_layer/"/><link rel="canonical" href="https://NumericalEarth.github.io/SnowingOcean.jl/stable/literated/frazil_boundary_layer/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SnowingOcean.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../melting_under_ice/">Melting beneath an ice lid (2D)</a></li><li class="is-active"><a class="tocitem" href>Frazil ice in a cooling, wind-driven boundary layer (2D)</a><ul class="internal"><li><a class="tocitem" href="#The-frazil-model"><span>The frazil model</span></a></li><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#The-frazil-model-and-its-forcings"><span>The frazil model and its forcings</span></a></li><li><a class="tocitem" href="#Model"><span>Model</span></a></li><li><a class="tocitem" href="#Energy-diagnostic"><span>Energy diagnostic</span></a></li><li><a class="tocitem" href="#Results"><span>Results</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../library/">Library</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Frazil ice in a cooling, wind-driven boundary layer (2D)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Frazil ice in a cooling, wind-driven boundary layer (2D)</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/SnowingOcean.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/SnowingOcean.jl/blob/main/examples/frazil_boundary_layer.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Frazil-ice-in-a-cooling,-wind-driven-boundary-layer-(2D)"><a class="docs-heading-anchor" href="#Frazil-ice-in-a-cooling,-wind-driven-boundary-layer-(2D)">Frazil ice in a cooling, wind-driven boundary layer (2D)</a><a id="Frazil-ice-in-a-cooling,-wind-driven-boundary-layer-(2D)-1"></a><a class="docs-heading-anchor-permalink" href="#Frazil-ice-in-a-cooling,-wind-driven-boundary-layer-(2D)" title="Permalink"></a></h1><p>This example forms frazil ice in a turbulent ocean surface boundary layer. We start with cold, salty, <em>unstratified</em> water sitting at its freezing point, and apply a surface wind stress and surface cooling. The cooling pushes the surface water below its freezing point (supercooling); the <a href="../../library/#SnowingOcean.FrazilModel"><code>FrazilModel</code></a> then grows suspended frazil ice, releasing latent heat that holds the temperature near freezing.</p><p>Crucially, the frazil model rejects brine: growing salt-free ice concentrates salt in the remaining water, making it denser. Near the freezing point the thermal expansion is tiny, so it is this brine rejection — not the cooling directly — that drives the convective turbulence, which in turn mixes the frazil down through the boundary layer rather than leaving it trapped at the surface.</p><h2 id="The-frazil-model"><a class="docs-heading-anchor" href="#The-frazil-model">The frazil model</a><a id="The-frazil-model-1"></a><a class="docs-heading-anchor-permalink" href="#The-frazil-model" title="Permalink"></a></h2><p>The ice volume fraction <span>$ϕ$</span> and temperature <span>$T$</span> relax toward the local freezing point <span>$T⋆ = T^f(S, z)$</span> on a timescale <span>$τ$</span>:</p><p class="math-container">\[\frac{\mathrm{D} T}{\mathrm{D} t} = \frac{T⋆ - T}{τ}, \qquad
+\frac{\mathrm{D} ϕ}{\mathrm{D} t} = \frac{T⋆ - T}{τ\, 𝒯}, \qquad 𝒯 = \frac{L}{c}.\]</p><p>Supercooled water (<span>$T &lt; T⋆$</span>) grows frazil and is warmed back toward freezing by the released latent heat. Because <span>$c\,(T⋆-T)/τ = L\,(T⋆-T)/(τ𝒯)$</span>, the source terms conserve the combined sensible-plus-latent energy <span>$c\,T - L\,ϕ$</span> — we verify this below. Here <span>$τ$</span> is a constant; see <a href="../../library/#SnowingOcean.FrazilModel"><code>FrazilModel</code></a> for the population-based timescales used by more complete models.</p><pre><code class="language-julia hljs">using SnowingOcean
+using Oceananigans
+using Oceananigans.Units
+using CairoMakie</code></pre><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><p>A 2D <span>$x$</span>–<span>$z$</span> domain (<code>Flat</code> in <code>y</code>). Increasing the <code>y</code> size makes it 3D.</p><pre><code class="language-julia hljs">Lx, Lz = 64, 16
+Nx, Nz = 128, 64
+
+grid = RectilinearGrid(size = (Nx, Nz),
+                       halo = (5, 5),
+                       topology = (Periodic, Flat, Bounded),
+                       x = (0, Lx),
+                       z = (-Lz, 0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">128×1×64 RectilinearGrid{Float64, Periodic, Flat, Bounded} on CPU with 5×0×5 halo
+├── Periodic x ∈ [0.0, 64.0)  regularly spaced with Δx=0.5
+├── Flat y                    
+└── Bounded  z ∈ [-16.0, 0.0] regularly spaced with Δz=0.25</code></pre><p>Physical constants and surface forcing: a wind stress and a destabilizing heat loss.</p><pre><code class="language-julia hljs">ρₒ = 1026.0     # reference density (kg m⁻³)
+cₒ = 3991.0     # heat capacity (J kg⁻¹ K⁻¹)
+L  = 3.34e5     # latent heat of fusion (J kg⁻¹)
+
+Q  = 400.0                 # surface heat loss (W m⁻²)
+Jᵀ = Q / (ρₒ * cₒ)         # kinematic heat flux (positive upward ⇒ cooling), K m s⁻¹
+τx = -0.02 / ρₒ            # kinematic wind stress (m² s⁻²)
+
+T_bcs = FieldBoundaryConditions(top = FluxBoundaryCondition(Jᵀ))
+u_bcs = FieldBoundaryConditions(top = FluxBoundaryCondition(τx))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Oceananigans.FieldBoundaryConditions, with boundary conditions
+├── west: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── east: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── south: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── north: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── bottom: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)
+├── top: FluxBoundaryCondition: -1.94932e-5
+└── immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)</code></pre><h2 id="The-frazil-model-and-its-forcings"><a class="docs-heading-anchor" href="#The-frazil-model-and-its-forcings">The frazil model and its forcings</a><a id="The-frazil-model-and-its-forcings-1"></a><a class="docs-heading-anchor-permalink" href="#The-frazil-model-and-its-forcings" title="Permalink"></a></h2><p><code>FrazilModel</code> carries the relaxation timescale and the thermodynamic constants; <code>frazil_forcing</code> returns the <code>(T, ϕ)</code> source terms to pass to the model.</p><p>A depth-independent freezing point is appropriate for this shallow surface layer (the depth dependence changes Tᶠ by only ~0.01 °C over 16 m), so the unstratified interior sits exactly at freezing and only the cooled surface supercools.</p><p>The frazil-formation timescale <code>τ</code> controls <em>where</em> frazil appears. When <code>τ</code> is much shorter than the turbulent mixing time, supercooled water crystallizes at the surface before it can be mixed down. Choosing <code>τ</code> comparable to the convective/shear mixing time instead lets the turbulence stir supercooled water (and frazil) through the boundary layer, so frazil penetrates to depth.</p><pre><code class="language-julia hljs">liquidus = DepthDependentLiquidus(depth_slope=0)
+frazil = FrazilModel(300.0; liquidus, latent_heat=L, heat_capacity=cₒ)  # 5 min timescale
+forcing = frazil_forcing(frazil)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(T = DiscreteForcing{FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}}
+├── func: _frazil_temperature_forcing (generic function with 1 method)
+└── parameters: FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}(300.0, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}(LinearLiquidus(freshwater_melting_temperature = 0.0832, slope = 0.0573){Float64}
+├── freshwater_melting_temperature: 0.0832
+└── slope: 0.0573, 0.0), 334000.0, 3991.0), ϕ = DiscreteForcing{FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}}
+├── func: _frazil_concentration_forcing (generic function with 1 method)
+└── parameters: FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}(300.0, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}(LinearLiquidus(freshwater_melting_temperature = 0.0832, slope = 0.0573){Float64}
+├── freshwater_melting_temperature: 0.0832
+└── slope: 0.0573, 0.0), 334000.0, 3991.0), S = DiscreteForcing{FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}}
+├── func: _frazil_salt_forcing (generic function with 1 method)
+└── parameters: FrazilModel{Float64, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}, Float64}(300.0, DepthDependentLiquidus{LinearLiquidus{Float64}, Float64}(LinearLiquidus(freshwater_melting_temperature = 0.0832, slope = 0.0573){Float64}
+├── freshwater_melting_temperature: 0.0832
+└── slope: 0.0573, 0.0), 334000.0, 3991.0))</code></pre><h2 id="Model"><a class="docs-heading-anchor" href="#Model">Model</a><a id="Model-1"></a><a class="docs-heading-anchor-permalink" href="#Model" title="Permalink"></a></h2><p>Temperature and salinity set the buoyancy (linear equation of state); the frazil concentration <code>ϕ</code> is carried as a third tracer.</p><pre><code class="language-julia hljs">equation_of_state = LinearEquationOfState(thermal_expansion=3.87e-5, haline_contraction=7.86e-4)
+buoyancy = SeawaterBuoyancy(; equation_of_state)
+
+model = NonhydrostaticModel(grid; buoyancy, forcing,
+                            advection = WENO(order=9),
+                            coriolis = FPlane(f=1e-4),
+                            closure = ScalarDiffusivity(ν=1e-3, κ=1e-3),
+                            tracers = (:T, :S, :ϕ),
+                            boundary_conditions = (; T=T_bcs, u=u_bcs))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">NonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)
+├── grid: 128×1×64 RectilinearGrid{Float64, Periodic, Flat, Bounded} on CPU with 5×0×5 halo
+├── timestepper: RungeKutta3TimeStepper
+├── advection scheme: WENO{5, Float64, Oceananigans.Utils.BackendOptimizedDivision}(order=9)
+├── tracers: (T, S, ϕ)
+├── closure: ScalarDiffusivity{ExplicitTimeDiscretization}(ν=0.001, κ=(T=0.001, S=0.001, ϕ=0.001))
+├── buoyancy: SeawaterBuoyancy with g=9.80665 and LinearEquationOfState(thermal_expansion=3.87e-5, haline_contraction=0.000786) with ĝ = NegativeZDirection()
+└── coriolis: FPlane{Float64}(f=0.0001)</code></pre><p>Unstratified, cold, salty water exactly at its freezing point, with a little noise.</p><pre><code class="language-julia hljs">S₀ = 34.0
+T★ = melting_temperature(frazil.liquidus, S₀, 0)
+Tᵢ(x, z) = T★ + 1e-4 * randn()
+set!(model, T=Tᵢ, S=S₀, ϕ=0)</code></pre><h2 id="Energy-diagnostic"><a class="docs-heading-anchor" href="#Energy-diagnostic">Energy diagnostic</a><a id="Energy-diagnostic-1"></a><a class="docs-heading-anchor-permalink" href="#Energy-diagnostic" title="Permalink"></a></h2><p>We track the column-integrated, horizontally averaged combined energy per unit area, <span>$\mathcal{E} = ρ\, L_z\, (c\,\langle T \rangle - L\,\langle ϕ \rangle)$</span>. The frazil source conserves it, so <span>$\mathcal{E}$</span> should change <em>only</em> through the surface cooling, i.e. <span>$\mathcal{E}(t) = \mathcal{E}(0) - ρ\, c\, J^T t$</span>. Plotting both is a conservation check.</p><pre><code class="language-julia hljs">domain_mean(φ) = sum(interior(φ)) / length(interior(φ))
+total_energy() = ρₒ * Lz * (cₒ * domain_mean(model.tracers.T) - L * domain_mean(model.tracers.ϕ))
+
+times = Float64[]
+energies = Float64[]
+
+simulation = Simulation(model, Δt=0.5, stop_time=2hours)
+conjure_time_step_wizard!(simulation, cfl=0.7, max_Δt=5.0)
+
+function record!(sim)
+    push!(times, time(sim))
+    push!(energies, total_energy())
+    return nothing
+end
+simulation.callbacks[:energy] = Callback(record!, TimeInterval(2minutes))
+
+run!(simulation)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Initializing simulation...
+[ Info:     ... simulation initialization complete (3.109 seconds)
+[ Info: Executing initial time step...
+[ Info:     ... initial time step complete (3.939 seconds).
+[ Info: Simulation is stopping after running for 33.223 seconds.
+[ Info: Simulation time 2 hours equals or exceeds stop time 2 hours.</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>Energy conservation: the diagnosed energy follows the line set by the surface cooling.</p><pre><code class="language-julia hljs">E₀ = energies[1]
+expected = E₀ .- ρₒ * cₒ * Jᵀ .* times</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">61-element Vector{Float64}:
+ -1.2218775634293914e8
+ -1.2223575634293914e8
+ -1.2228375634293914e8
+ -1.2233175634293914e8
+ -1.2237975634293914e8
+ -1.2242775634293914e8
+ -1.2247575634293914e8
+ -1.2252375634293914e8
+ -1.2257175634293914e8
+ -1.2261975634293914e8
+  ⋮
+ -1.2468375634293914e8
+ -1.2473175634293914e8
+ -1.2477975634293914e8
+ -1.2482775634293914e8
+ -1.2487575634293914e8
+ -1.2492375634293914e8
+ -1.2497175634293914e8
+ -1.2501975634293914e8
+ -1.2506775634293914e8</code></pre><p>Horizontal averages (over <code>x</code>) of the final frazil concentration and temperature.</p><pre><code class="language-julia hljs">xϕ = sum(interior(model.tracers.ϕ), dims=1)[1, 1, :] ./ Nx
+xT = sum(interior(model.tracers.T), dims=1)[1, 1, :] ./ Nx
+zc = znodes(grid, Center())
+
+fig = Figure(size=(1000, 420))
+
+axE = Axis(fig[1, 1], xlabel=&quot;time (hours)&quot;, ylabel=&quot;energy (J m⁻²)&quot;,
+           title=&quot;Combined sensible + latent energy&quot;)
+lines!(axE, times ./ hour, energies, label=&quot;diagnosed  ρ Lz (c⟨T⟩ - L⟨ϕ⟩)&quot;)
+lines!(axE, times ./ hour, expected, linestyle=:dash, label=&quot;E₀ - ρ c Jᵀ t&quot;)
+axislegend(axE, position=:lb)
+
+axϕ = Axis(fig[1, 2], xlabel=&quot;⟨ϕ⟩  (ice volume fraction)&quot;, ylabel=&quot;z (m)&quot;,
+           title=&quot;Horizontally averaged frazil&quot;)
+lines!(axϕ, xϕ, zc)
+
+axT = Axis(fig[1, 3], xlabel=&quot;⟨T⟩ (°C)&quot;, ylabel=&quot;z (m)&quot;, title=&quot;Horizontally averaged T&quot;)
+lines!(axT, xT, zc, label=&quot;⟨T⟩&quot;)
+vlines!(axT, [T★], color=:gray, linestyle=:dash, label=&quot;T⋆&quot;)
+axislegend(axT, position=:rb)
+
+fig</code></pre><img src="6a0a45f9.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../melting_under_ice/">« Melting beneath an ice lid (2D)</a><a class="docs-footer-nextpage" href="../../library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 09:02">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
