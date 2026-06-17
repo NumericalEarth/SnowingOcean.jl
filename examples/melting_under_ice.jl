@@ -104,28 +104,16 @@ run!(simulation)
 
 # ## Visualize
 #
-# Temperature and salinity at the end of the run. The ocean cools and freshens in a
-# boundary layer beneath the ice (shown in gray).
-
-xc = xnodes(grid, Center())
-zc = znodes(grid, Center())
-
-solid = [is_ice(x, z) for x in xc, z in zc]
-mask(φ) = (ψ = Array{Float64}(interior(φ)[:, 1, :]); ψ[solid] .= NaN; ψ)
-function nanrange(ψ)
-    lo, hi = extrema(filter(!isnan, ψ))
-    return lo == hi ? (lo - 1, hi + 1) : (lo, hi)
-end
-
-Tn = mask(model.tracers.T)
-Sn = mask(model.tracers.S)
+# Temperature and salinity at the end of the run. We plot the `T` and `S` fields directly:
+# the Oceananigans Makie extension supplies the `x`–`z` coordinates and masks the immersed
+# ice (shown in gray), where the ocean has cooled and freshened in a boundary layer.
 
 fig = Figure(size=(900, 700))
-axT = Axis(fig[1, 1], xlabel="x (m)", ylabel="z (m)", title="Temperature (°C)")
-axS = Axis(fig[2, 1], xlabel="x (m)", ylabel="z (m)", title="Salinity (g kg⁻¹)")
+axT = Axis(fig[1, 1]; xlabel="x (m)", ylabel="z (m)", title="Temperature (°C)")
+axS = Axis(fig[2, 1]; xlabel="x (m)", ylabel="z (m)", title="Salinity (g kg⁻¹)")
 
-hmT = heatmap!(axT, xc, zc, Tn; colormap=:thermal, colorrange=nanrange(Tn), nan_color=:gray70)
-hmS = heatmap!(axS, xc, zc, Sn; colormap=:haline, colorrange=nanrange(Sn), nan_color=:gray70)
+hmT = heatmap!(axT, model.tracers.T; colormap=:thermal, nan_color=:gray70)
+hmS = heatmap!(axS, model.tracers.S; colormap=:haline, nan_color=:gray70)
 Colorbar(fig[1, 2], hmT)
 Colorbar(fig[2, 2], hmS)
 

@@ -192,15 +192,11 @@ nothing #hide
 
 ϕ_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "ϕ_avg")
 T_avg = FieldTimeSeries("frazil_boundary_layer.jld2", "T_avg")
-zc = znodes(grid, Center())
 
 column_mean(c) = sum(interior(c)) / length(interior(c))
 energy(c_T, c_ϕ) = ρₒ * Lz * (cₒ * column_mean(c_T) - L * column_mean(c_ϕ))
 energies = [energy(T_avg[i], ϕ_avg[i]) for i in 1:length(times)]
 expected = energies[1] .- ρₒ * cₒ * Jᵀ .* times
-
-ϕ_final = interior(ϕ_avg[end])[1, 1, :]
-T_final = interior(T_avg[end])[1, 1, :]
 
 fig = Figure(size = (1000, 420))
 
@@ -210,12 +206,13 @@ lines!(axE, times ./ hour, energies, label = "diagnosed  ρ Lz (c⟨T⟩ - L⟨�
 lines!(axE, times ./ hour, expected, linestyle = :dash, label = "ℰ₀ - ρ c Jᵀ t")
 axislegend(axE, position = :lb)
 
+## The averages are 1D fields in z, which the Makie extension plots as value-vs-z profiles.
 axϕ = Axis(fig[1, 2]; xlabel = "⟨ϕ⟩  (ice volume fraction)", ylabel = "z (m)",
            title = "Horizontally averaged frazil")
-lines!(axϕ, ϕ_final, zc)
+lines!(axϕ, ϕ_avg[end])
 
 axT = Axis(fig[1, 3]; xlabel = "⟨T⟩ (°C)", ylabel = "z (m)", title = "Horizontally averaged T")
-lines!(axT, T_final, zc, label = "⟨T⟩")
+lines!(axT, T_avg[end]; label = "⟨T⟩")
 vlines!(axT, [T★], color = :gray, linestyle = :dash, label = "T⋆")
 axislegend(axT, position = :rb)
 
