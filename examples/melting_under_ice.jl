@@ -61,7 +61,10 @@ grid = ImmersedBoundaryGrid(grid, GridFittedBoundary(is_ice))
 #
 # `IceOceanInterface` allocates the flux `Field`s and stores the melt/drag parameters;
 # `ice_ocean_boundary_conditions` builds the `(u, v, T, S)` boundary conditions that read
-# them on the immersed ice base.
+# them on the immersed ice base. The default `formulation = ThreeEquation()` uses constant
+# transfer coefficients; pass `formulation = MoninObukhovNearWall()` instead for the
+# wall-model closure of Vreugdenhil et al. (2022), which computes the friction velocity and
+# transfer coefficients self-consistently with the near-wall stratification.
 
 interface = IceOceanInterface(grid)
 bcs = ice_ocean_boundary_conditions(interface)

@@ -9,6 +9,7 @@ export
     melting_temperature,
     TwoEquation,
     ThreeEquation,
+    MoninObukhovNearWall,
     interface_temperature_and_salinity,
     IceOceanInterface,
     compute_melt_fluxes!,
@@ -79,6 +80,7 @@ The default coefficients approximate the TEOS-10 freezing temperature
     - slope * S + depth_coefficient * z
 
 include("ice_ocean_interface.jl")
+include("near_wall_model.jl")
 include("frazil.jl")
 
 end # module SnowingOcean

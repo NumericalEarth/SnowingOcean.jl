@@ -1,8 +1,8 @@
 using Oceananigans
-using Oceananigans: defaults
+using Oceananigans: defaults, UpdateStateCallsite
 using Oceananigans.Architectures: architecture
 using Oceananigans.Grids: znode, Center
-using Oceananigans.Operators: ℑxᶜᵃᵃ, ℑyᵃᶜᵃ
+using Oceananigans.Operators: ℑxᶜᵃᵃ, ℑyᵃᶜᵃ, Δzᶜᶜᶜ
 using Oceananigans.BoundaryConditions: FluxBoundaryCondition, FieldBoundaryConditions
 using Oceananigans.ImmersedBoundaries: ImmersedBoundaryCondition
 using Oceananigans.Utils: launch!
@@ -159,6 +159,26 @@ end
     return Tᵦ, Sᵦ, ṁ
 end
 
+"""
+    solve_interface(formulation, p, T, S, speed, z, z_g)
+
+Return `(Tᵦ, Sᵦ, ṁ, u★)` at the ice base for the given melt `formulation`, the parameter
+NamedTuple `p` (from [`IceOceanInterface`](@ref)), the adjacent-ocean `T`, `S`, the
+near-wall `speed = |u|`, the height `z`, and the first-cell height `z_g`. For
+[`TwoEquation`](@ref)/[`ThreeEquation`](@ref) the friction velocity follows the prescribed
+quadratic drag, `u★ = √(Cᴰ |u|²)`; the [`MoninObukhovNearWall`](@ref) formulation instead
+solves for `u★` and the transfer coefficients self-consistently.
+"""
+@inline function solve_interface(formulation::Union{TwoEquation, ThreeEquation}, p, T, S, speed, z, z_g)
+    u★ = max(sqrt(p.drag_coefficient * speed^2), p.minimum_friction_velocity)
+    Tᵦ, Sᵦ, ṁ = interface_temperature_and_salinity(formulation, p.liquidus, T, S, z, u★,
+                                                    p.heat_transfer_coefficient,
+                                                    p.salt_transfer_coefficient,
+                                                    p.ocean_heat_capacity, p.latent_heat,
+                                                    p.ocean_reference_density, p.ice_density)
+    return Tᵦ, Sᵦ, ṁ, u★
+end
+
 #####
 ##### The interface object: holds the flux Fields, the drag, and the melt parameters
 #####
@@ -242,28 +262,18 @@ end
         Sᵢ = S[i, j, k]
         uᶜ = ℑxᶜᵃᵃ(i, j, k, grid, u)
         vᶜ = ℑyᵃᶜᵃ(i, j, k, grid, v)
-        u★ = max(sqrt(p.drag_coefficient * (uᶜ^2 + vᶜ^2)), p.minimum_friction_velocity)
+        speed = sqrt(uᶜ^2 + vᶜ^2)
         z = znode(i, j, k, grid, Center(), Center(), Center())
+        z_g = Δzᶜᶜᶜ(i, j, k, grid) / 2  # height of the first cell centre above the ice base
 
-        Tᵦ, Sᵦ, ṁ = interface_temperature_and_salinity(p.formulation, p.liquidus, Tᵢ, Sᵢ, z, u★,
-                                                        p.heat_transfer_coefficient,
-                                                        p.salt_transfer_coefficient,
-                                                        p.ocean_heat_capacity, p.latent_heat,
-                                                        p.ocean_reference_density, p.ice_density)
+        Tᵦ, Sᵦ, ṁ, u★ = solve_interface(p.formulation, p, Tᵢ, Sᵢ, speed, z, z_g)
 
-        γ_T = p.heat_transfer_coefficient * u★
-        γ_S = p.salt_transfer_coefficient * u★
-
-        # Kinematic fluxes applied at the (immersed top) interface. The boundary-condition
-        # value increases the boundary-adjacent cell, so melting (T > Tᵦ) must give a
-        # negative temperature flux to cool the ocean: Jᵀ = -γ_T (T - Tᵦ). Likewise
-        # meltwater (Sᵦ < S) freshens the ocean: Jˢ = -γ_S (S - Sᵦ).
-        Jᵀ[i, j, k] = - γ_T * (Tᵢ - Tᵦ)
-        if p.formulation isa TwoEquation
-            Jˢ[i, j, k] = - p.ice_density / p.ocean_reference_density * ṁ * Sᵢ
-        else
-            Jˢ[i, j, k] = - γ_S * (Sᵢ - Sᵦ)
-        end
+        # Kinematic fluxes at the (immersed top) interface, written so that melting (ṁ > 0)
+        # cools and freshens the boundary-adjacent cell (the BC value increases the cell, so
+        # we apply a minus sign). The heat balance ρₒcₒ Jᵀ = ρᵢ L ṁ and salt balance
+        # ρₒ Jˢ = ρᵢ ṁ Sᵦ give these directly from the melt rate:
+        Jᵀ[i, j, k] = - p.ice_density * p.latent_heat / (p.ocean_reference_density * p.ocean_heat_capacity) * ṁ
+        Jˢ[i, j, k] = - p.ice_density / p.ocean_reference_density * ṁ * Sᵦ
     end
 end
 
@@ -302,12 +312,19 @@ end
 """
     add_melt_flux_callback!(simulation, interface; name=:melt_fluxes)
 
-Add a callback that calls [`compute_melt_fluxes!`](@ref) every iteration, keeping the flux
-`Field`s consistent with the evolving ocean state.
+Add a callback that calls [`compute_melt_fluxes!`](@ref) to keep the flux `Field`s
+consistent with the evolving ocean state. It runs at the `UpdateStateCallsite` — i.e. inside
+`update_state!`, after the halos are filled and before the tendencies are computed — so the
+fluxes used in a given step reflect that step's state (no lag).
+
+(Oceananigans' `update_boundary_condition!` hook, used by open boundary conditions, is a
+no-op for `ImmersedBoundaryCondition`s, so a self-updating immersed flux BC would require
+type piracy; this callback achieves the same in-`update_state!` timing without it.)
 """
 function add_melt_flux_callback!(simulation, interface::IceOceanInterface; name=:melt_fluxes)
-    simulation.callbacks[name] = Callback(sim -> compute_melt_fluxes!(sim.model, interface),
-                                          IterationInterval(1))
+    simulation.callbacks[name] = Callback(compute_melt_fluxes!, IterationInterval(1);
+                                          parameters = interface,
+                                          callsite = UpdateStateCallsite())
     return simulation
 end
 
