@@ -78,32 +78,32 @@ end
 simulation.callbacks[:energy] = Callback(record!, TimeInterval(2minutes))
 
 run!(simulation)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Initializing simulation...
-[ Info:     ... simulation initialization complete (3.112 seconds)
+[ Info:     ... simulation initialization complete (2.907 seconds)
 [ Info: Executing initial time step...
-[ Info:     ... initial time step complete (4.540 seconds).
-[ Info: Simulation is stopping after running for 34.244 seconds.
+[ Info:     ... initial time step complete (3.815 seconds).
+[ Info: Simulation is stopping after running for 31.902 seconds.
 [ Info: Simulation time 2 hours equals or exceeds stop time 2 hours.</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>Energy conservation: the diagnosed energy follows the line set by the surface cooling.</p><pre><code class="language-julia hljs">E₀ = energies[1]
 expected = E₀ .- ρₒ * cₒ * Jᵀ .* times</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">61-element Vector{Float64}:
- -1.2218773045521764e8
- -1.2223573045521764e8
- -1.2228373045521764e8
- -1.2233173045521764e8
- -1.2237973045521764e8
- -1.2242773045521764e8
- -1.2247573045521764e8
- -1.2252373045521764e8
- -1.2257173045521764e8
- -1.2261973045521764e8
+ -1.2218783641327693e8
+ -1.2223583641327693e8
+ -1.2228383641327693e8
+ -1.2233183641327693e8
+ -1.2237983641327693e8
+ -1.2242783641327693e8
+ -1.2247583641327693e8
+ -1.2252383641327693e8
+ -1.2257183641327693e8
+ -1.2261983641327693e8
   ⋮
- -1.2468373045521764e8
- -1.2473173045521764e8
- -1.2477973045521764e8
- -1.2482773045521764e8
- -1.2487573045521764e8
- -1.2492373045521764e8
- -1.2497173045521764e8
- -1.2501973045521764e8
- -1.2506773045521764e8</code></pre><p>Horizontal averages (over <code>x</code>) of the final frazil concentration and temperature.</p><pre><code class="language-julia hljs">xϕ = sum(interior(model.tracers.ϕ), dims=1)[1, 1, :] ./ Nx
+ -1.2468383641327693e8
+ -1.2473183641327693e8
+ -1.2477983641327693e8
+ -1.2482783641327693e8
+ -1.2487583641327693e8
+ -1.2492383641327693e8
+ -1.2497183641327693e8
+ -1.2501983641327693e8
+ -1.2506783641327693e8</code></pre><p>Horizontal averages (over <code>x</code>) of the final frazil concentration and temperature.</p><pre><code class="language-julia hljs">xϕ = sum(interior(model.tracers.ϕ), dims=1)[1, 1, :] ./ Nx
 xT = sum(interior(model.tracers.T), dims=1)[1, 1, :] ./ Nx
 zc = znodes(grid, Center())
 
@@ -124,4 +124,4 @@ lines!(axT, xT, zc, label=&quot;⟨T⟩&quot;)
 vlines!(axT, [T★], color=:gray, linestyle=:dash, label=&quot;T⋆&quot;)
 axislegend(axT, position=:rb)
 
-fig</code></pre><img src="a135ea09.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../melting_under_ice/">« Melting beneath an ice lid (2D)</a><a class="docs-footer-nextpage" href="../../library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 10:17">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig</code></pre><img src="e6df8e29.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../melting_under_ice/">« Melting beneath an ice lid (2D)</a><a class="docs-footer-nextpage" href="../../library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 11:49">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
