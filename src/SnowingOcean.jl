@@ -3,7 +3,19 @@ module SnowingOcean
 export
     monochromatic_stokes_drift,
     rising_tracer_forcing,
-    linear_freezing_temperature
+    linear_freezing_temperature,
+    LinearLiquidus,
+    DepthDependentLiquidus,
+    melting_temperature,
+    TwoEquation,
+    ThreeEquation,
+    MoninObukhovNearWall,
+    interface_temperature_and_salinity,
+    IceOceanInterface,
+    compute_melt_fluxes!,
+    ice_ocean_boundary_conditions,
+    FrazilModel,
+    frazil_forcing
 
 using Oceananigans
 using Oceananigans.BoundaryConditions: fill_halo_regions!, ImpenetrableBoundaryCondition
@@ -65,5 +77,9 @@ The default coefficients approximate the TEOS-10 freezing temperature
 """
 @inline linear_freezing_temperature(S, z; slope=0.0545, depth_coefficient=7.9e-4) =
     - slope * S + depth_coefficient * z
+
+include("ice_ocean_interface.jl")
+include("near_wall_model.jl")
+include("frazil.jl")
 
 end # module SnowingOcean

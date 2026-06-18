@@ -138,16 +138,9 @@ set!(model, b=bᵢ, v=V₀)
 
 # ## Visualize the initial condition (x–z cross section)
 #
-# Buoyancy is shown in the fluid region; ice and rock (immersed cells) are
-# masked out and shown in gray. The ice-shelf base and seafloor are overlaid.
-
-xc = xnodes(grid, Center())
-zc = znodes(grid, Center())
-
-bn = interior(model.tracers.b)[:, 1, :]            # x–z slice
-solid = [is_immersed(x, z, bathymetry) for x in xc, z in zc]
-bn_masked = Array{Float64}(bn)                     # copy so we can mask in place
-bn_masked[solid] .= NaN
+# We plot the `b` field directly: the Oceananigans Makie extension supplies the `x`–`z`
+# coordinates and masks the immersed ice and bedrock (shown in gray). We overlay the
+# ice-shelf base and seafloor, filled to distinguish ice (blue) from rock (brown).
 
 xf = range(0, Lx, length=600)
 draft_line = ice_draft.(xf, Ref(bathymetry))
@@ -159,7 +152,7 @@ ax = Axis(fig[1, 1];
           ylabel = "z (m)",
           title = @sprintf("Ice-shelf cavity initial condition (flow into page, v = %.2f m s⁻¹)", V₀))
 
-hm = heatmap!(ax, xc, zc, bn_masked; colormap=:deep, nan_color=:gray70)
+hm = heatmap!(ax, model.tracers.b; colormap=:deep, nan_color=:gray70)
 
 # Ice shelf (fill from the base up to the surface) and bedrock (fill below the seafloor)
 band!(ax, xf, draft_line, fill(0.0, length(xf)); color=(:skyblue, 0.35))
